@@ -30,6 +30,6 @@ jobs:
           GITHUB_CLIENT_ID: test
           GITHUB_CLIENT_SECRET: test
           JWT_SECRET_KEY: test-secret
-          BACKEND_URL: http://localhost:8000
-          FRONTEND_URL: http://localhost:3000
+          BACKEND_URL: https://hng-stage-3-lqvd.vercel.app/
+          FRONTEND_URL: https://hng-stage-3web-3aha.vercel.app/
         run: pytest tests/ -v --tb=short || true

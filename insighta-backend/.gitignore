@@ -7,5 +7,4 @@ __pycache__/
 *.egg-info/
 dist/
 .vercel/
-seed_profiles.json
 venv/
