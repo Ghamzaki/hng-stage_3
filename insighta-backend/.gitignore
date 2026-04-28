@@ -8,3 +8,4 @@ __pycache__/
 dist/
 .vercel/
 seed_profiles.json
+venv/
