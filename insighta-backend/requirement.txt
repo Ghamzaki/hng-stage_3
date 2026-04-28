@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+asyncpg
+httpx
+uuid6
+pydantic
+python-dotenv
+PyJWT
+jinja2
