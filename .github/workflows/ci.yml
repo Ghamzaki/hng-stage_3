@@ -31,5 +31,5 @@ jobs:
           GITHUB_CLIENT_SECRET: test
           JWT_SECRET_KEY: test-secret
           BACKEND_URL: https://hng-stage-3-delta.vercel.app
-          FRONTEND_URL: https://hng-stage-3web-3aha.vercel.app
+          FRONTEND_URL: https://hng-stage-3web.vercel.app
         run: pytest tests/ -v --tb=short || true

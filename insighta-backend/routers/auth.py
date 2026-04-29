@@ -18,7 +18,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID")
 GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET")
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://hng-stage-3web-3aha.vercel.app")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://hng-stage-3web.vercel.app")
 BACKEND_URL = os.environ.get("BACKEND_URL", "https://hng-stage-3-delta.vercel.app")
 
 
