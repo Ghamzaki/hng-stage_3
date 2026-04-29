@@ -166,4 +166,4 @@ async def bad_gateway_handler(request: Request, exc):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "success"}
