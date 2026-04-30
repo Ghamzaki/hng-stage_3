@@ -97,7 +97,7 @@ app.include_router(users_router)
 @app.on_event("startup")
 async def startup():
     await init_db()
-    await seed_db()
+    # await seed_db()  # Seed locally only
 
 
 # ── Global exception handlers ─────────────────────────────────────────────────

@@ -1,0 +1,70 @@
+@router.get("/github/callback")
+async def github_callback(
+    code: str = Query(None),
+    state: str = Query(None),
+    code_verifier: str = Query(None),
+    redirect_to: str = Query(None),
+):
+    """Handle GitHub OAuth callback for both CLI and browser."""
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing code parameter")
+    if not state:
+        raise HTTPException(status_code=400, detail="Missing state parameter")
+    
+    # Exchange code for GitHub access token
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        token_resp = await client.post(
+            "https://github.com/login/oauth/access_token",
+            headers={"Accept": "application/json"},
+            data={
+                "client_id": GITHUB_CLIENT_ID,
+                "client_secret": GITHUB_CLIENT_SECRET,
+                "code": code,
+                "redirect_uri": f"{BACKEND_URL}/auth/github/callback",
+            },
+        )
+
+    token_data = token_resp.json()
+    gh_token = token_data.get("access_token")
+    if not gh_token:
+        raise HTTPException(status_code=400, detail="Invalid code or state")
+
+    # Fetch GitHub user info
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        user_resp = await client.get(
+            "https://api.github.com/user",
+            headers={"Authorization": f"Bearer {gh_token}"},
+        )
+        github_user = user_resp.json()
+
+        if not github_user.get("email"):
+            email_resp = await client.get(
+                "https://api.github.com/user/emails",
+                headers={"Authorization": f"Bearer {gh_token}"},
+            )
+            emails = email_resp.json()
+            primary = next((e["email"] for e in emails if e.get("primary")), None)
+            github_user["email"] = primary
+
+    access_token, refresh_token, user = await _upsert_user_and_issue_tokens(github_user)
+
+    # CLI flow: return JSON
+    if code_verifier is not None or redirect_to is None:
+        return JSONResponse({
+            "status": "success",
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "user": {
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"],
+                "role": user["role"],
+            },
+        })
+
+    # Browser flow
+    from urllib.parse import urlencode
+    dest = redirect_to or f"{FRONTEND_URL}/auth/callback"
+    params = urlencode({"access_token": access_token, "refresh_token": refresh_token})
+    resp = RedirectResponse(url=f"{dest}?{params}", status_code=302)
+    return resp
