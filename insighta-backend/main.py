@@ -10,6 +10,7 @@ from fastapi.templating import Jinja2Templates
 from database import init_db, seed_db
 from routers.profiles import router as profiles_router
 from routers.auth import router as auth_router
+from routers.users import router as users_router
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ async def rate_limit_and_log(request: Request, call_next):
 
 app.include_router(auth_router)
 app.include_router(profiles_router)
+app.include_router(users_router)
 
 
 @app.on_event("startup")
