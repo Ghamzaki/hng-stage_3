@@ -123,18 +123,17 @@ async def github_login(
 
 @router.get("/github/callback")
 async def github_callback(
-    code: str = Query(...),
-    state: str = Query(...),
+    code: str = Query(None),
+    state: str = Query(None),
     code_verifier: str = Query(None),
     redirect_to: str = Query(None),
-    response: Response = None,
 ):
-    """
-    Handle GitHub OAuth callback for both CLI and browser.
-    - CLI sends code_verifier (PKCE); we pass it along.
-    - Browser flow omits code_verifier.
-    - redirect_to controls where browser is sent after login.
-    """
+    """Handle GitHub OAuth callback for both CLI and browser."""
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing code parameter")
+    if not state:
+        raise HTTPException(status_code=400, detail="Missing state parameter")
+    
     # Exchange code for GitHub access token
     async with httpx.AsyncClient(timeout=10.0) as client:
         token_resp = await client.post(
@@ -151,7 +150,7 @@ async def github_callback(
     token_data = token_resp.json()
     gh_token = token_data.get("access_token")
     if not gh_token:
-        raise HTTPException(status_code=502, detail="GitHub token exchange failed")
+        raise HTTPException(status_code=400, detail="Invalid code or state")
 
     # Fetch GitHub user info
     async with httpx.AsyncClient(timeout=10.0) as client:
@@ -161,7 +160,6 @@ async def github_callback(
         )
         github_user = user_resp.json()
 
-        # Fetch email if not public
         if not github_user.get("email"):
             email_resp = await client.get(
                 "https://api.github.com/user/emails",
@@ -187,14 +185,12 @@ async def github_callback(
             },
         })
 
-    # Browser flow: redirect back to portal with tokens as one-time query params
-    # The portal's /auth/callback will read these and set its own HTTP-only cookies
+    # Browser flow
     from urllib.parse import urlencode
     dest = redirect_to or f"{FRONTEND_URL}/auth/callback"
     params = urlencode({"access_token": access_token, "refresh_token": refresh_token})
     resp = RedirectResponse(url=f"{dest}?{params}", status_code=302)
     return resp
-
 
 # ── POST /auth/refresh ───────────────────────────────────────────────────────
 
